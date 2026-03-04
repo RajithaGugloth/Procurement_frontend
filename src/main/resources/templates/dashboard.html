@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Procurement System</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div
+                    style="width: 32px; height: 32px; background: var(--primary); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-weight: 800;">P</span>
+            </div>
+            Procurement
+        </div>
+
+        <nav>
+            <ul class="sidebar-nav">
+                <li><a th:href="@{/dashboard}" class="active"><span>📊</span> Dashboard</a></li>
+                <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/users}"><span>👥</span> Users</a></li>
+                <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/audit-logs}"><span>📜</span> Audit Logs</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN','PROCUREMENT_MANAGER')">
+                    <a th:href="@{/vendor}"><span>🏢</span> Vendors</a>
+                </li>
+
+                <li sec:authorize="hasAnyRole('ADMIN','EMPLOYEE','PROCUREMENT_MANAGER')">
+                    <a th:href="@{/requisition}"><span>📝</span> Requisitions</a>
+                </li>
+
+                <li sec:authorize="hasAnyRole('ADMIN','PROCUREMENT_MANAGER')">
+                    <a th:href="@{/purchase-order}"><span>📦</span> Purchase Orders</a>
+                </li>
+
+                <li sec:authorize="hasAnyRole('ADMIN','PROCUREMENT_MANAGER')">
+                    <a th:href="@{/approval}"><span>✅</span> Approvals</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a th:href="@{/logout}"
+               style="color: #fca5a5; text-decoration: none; font-size: 0.875rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span>🚪</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 700;">Dashboard Overview</h1>
+                <p style="color: var(--text-muted); font-size: 0.875rem;">Welcome back, <span
+                        sec:authentication="name" style="font-weight: 600; color: var(--primary);"></span></p>
+            </div>
+            <div class="badge badge-success" style="padding: 0.5rem 1rem;">System Active</div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="card animate-fade-in">
+                <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <span style="font-size: 0.875rem; color: var(--text-muted); font-weight: 500;">Total
+                            Vendors</span>
+                    <div style="padding: 0.5rem; background: #e0e7ff; color: #4338ca; border-radius: 0.5rem;">🏢
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.1s;">
+                        <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Total
+                            Vendors</div>
+                        <div id="stat-vendors" style="font-size: 2rem; font-weight: 700;">0</div>
+                    </div>
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.2s;">
+                        <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Active
+                            Requisitions</div>
+                        <div id="stat-requisitions" style="font-size: 2rem; font-weight: 700;">0</div>
+                    </div>
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.3s;">
+                        <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Pending
+                            Approvals</div>
+                        <div id="stat-approvals" style="font-size: 2rem; font-weight: 700;">0</div>
+                    </div>
+                    <div sec:authorize="hasRole('ADMIN')" class="stat-card animate-fade-in"
+                         style="animation-delay: 0.4s; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));">
+                        <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">System
+                            Users</div>
+                        <div id="stat-users" style="font-size: 2rem; font-weight: 700;">0</div>
+                    </div>
+                    <div sec:authorize="hasRole('ADMIN')" class="stat-card animate-fade-in"
+                         style="animation-delay: 0.5s; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));">
+                        <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">System
+                            Logs</div>
+                        <div id="stat-logs" style="font-size: 2rem; font-weight: 700;">0</div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Placeholder -->
+                <div class="card animate-fade-in" style="animation-delay: 0.3s;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Recent Activity</h3>
+                    <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+                        <p>No recent activity found. Start by managing your <a th:href="@{/vendor}"
+                                                                               style="color: var(--primary); text-decoration: none; font-weight: 500;">vendors</a>.
+                        </p>
+                    </div>
+                </div>
+    </main>
+</div>
+
+<script th:src="@{/js/api.js}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDashboardStats();
+    });
+
+    async function loadDashboardStats() {
+        try {
+            const stats = await API.fetch('/api/procurement/stats');
+            document.getElementById('stat-vendors').textContent = stats.totalVendors;
+            document.getElementById('stat-requisitions').textContent = stats.activeRequisitions;
+            document.getElementById('stat-approvals').textContent = stats.pendingApprovals;
+
+            if (document.getElementById('stat-users')) {
+                document.getElementById('stat-users').textContent = stats.totalUsers || 0;
+            }
+            if (document.getElementById('stat-logs')) {
+                document.getElementById('stat-logs').textContent = stats.totalAuditLogs || 0;
+            }
+        } catch (err) {
+            console.error('Failed to load dashboard stats:', err);
+        }
+    }
+</script>
+</body>
+
+</html>

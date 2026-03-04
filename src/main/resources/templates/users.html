@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Procurement System</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div
+                    style="width: 32px; height: 32px; background: var(--primary); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-weight: 800;">P</span>
+            </div>
+            Procurement
+        </div>
+        <nav>
+            <ul class="sidebar-nav">
+                <li><a th:href="@{/dashboard}"><span>📊</span> Dashboard</a></li>
+                <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/users}" class="active"><span>👥</span> Users</a>
+                </li>
+                <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/audit-logs}"><span>📜</span> Audit Logs</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN','PROCUREMENT_MANAGER')"><a
+                        th:href="@{/vendor}"><span>🏢</span> Vendors</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN','EMPLOYEE','PROCUREMENT_MANAGER')"><a
+                        th:href="@{/requisition}"><span>📝</span> Requisitions</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN','PROCUREMENT_MANAGER')"><a
+                        th:href="@{/purchase-order}"><span>📦</span> Purchase Orders</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN','PROCUREMENT_MANAGER')"><a
+                        th:href="@{/approval}"><span>✅</span> Approvals</a></li>
+            </ul>
+        </nav>
+        <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a th:href="@{/logout}"
+               style="color: #fca5a5; text-decoration: none; font-size: 0.875rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span>🚪</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header style="margin-bottom: 2rem;">
+            <h1 style="font-size: 1.5rem; font-weight: 700;">User Management</h1>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">Manage system access and user roles</p>
+        </header>
+
+        <div class="card animate-fade-in">
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th>Roles</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="user-list">
+                    <!-- Data will be loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/api.js}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', loadUsers);
+
+    async function loadUsers() {
+        try {
+            const users = await API.fetch('/api/admin/users');
+            const list = document.getElementById('user-list');
+            list.innerHTML = users.map(u => `
+                    <tr>
+                        <td style="font-weight: 600;">${u.username}</td>
+                        <td style="color: var(--text-muted); font-size: 0.875rem;">${u.email}</td>
+                        <td style="font-weight: 500;">${u.fullName || '-'}</td>
+                        <td>
+                            ${u.roles.map(r => {
+                const roleName = r.name.replace('ROLE_', '');
+                let color = '#6366f1'; // Default
+                if (roleName === 'ADMIN') color = '#ef4444';
+                if (roleName === 'PROCUREMENT_MANAGER') color = '#10b981';
+                if (roleName === 'EMPLOYEE') color = '#f59e0b';
+                return `<span class="badge" style="background: ${color}22; color: ${color}; border: 1px solid ${color}44; margin-right: 0.25rem;">${roleName}</span>`;
+            }).join('')}
+                        </td>
+                        <td><span class="badge ${u.enabled ? 'badge-success' : 'badge-danger'}">${u.enabled ? 'ACTIVE' : 'DISABLED'}</span></td>
+                        <td style="text-align: right;">
+                            <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; border: 1px solid var(--border); background: white;"
+                                    onclick="toggleUser(${u.id})">${u.enabled ? '🚫 Disable' : '✅ Enable'}</button>
+                        </td>
+                    </tr>
+                `).join('');
+            if (users.length === 0) {
+                list.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">No users found</td></tr>';
+            }
+        } catch (err) {
+            UI.showToast('Failed to load users: ' + err.message, 'error');
+        }
+    }
+
+    async function toggleUser(id) {
+        try {
+            await API.fetch(`/api/admin/users/${id}/toggle`, { method: 'PATCH' });
+            UI.showToast('User status updated');
+            loadUsers();
+        } catch (err) {
+            UI.showToast(err.message, 'error');
+        }
+    }
+</script>
+</body>
+
+</html>
